@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:http/http.dart' as http;
 
 import 'core/network/api_client.dart';
 import 'core/network/auth_interceptor.dart';
 import 'core/storage/token_storage.dart';
+
+import 'features/auth/data/datasources/auth_remote_datasource.dart';
+import 'features/auth/data/repositories/auth_repository_impl.dart';
+import 'features/auth/domain/usecases/login_usecase.dart';
+import 'features/auth/presentation/bloc/auth_bloc.dart';
+import 'features/auth/presentation/pages/login_page.dart';
 
 void main() {
   final tokenStorage = TokenStorage();
@@ -15,16 +22,28 @@ void main() {
 
   apiClient.setAuthInterceptor(authInterceptor);
 
-  runApp(const MyApp());
+  final authRepository = AuthRepositoryImpl(
+    remote: AuthRemoteDataSource(apiClient),
+    tokenStorage: tokenStorage,
+  );
+
+  runApp(MyApp(
+    loginUseCase: LoginUseCase(authRepository),
+  ));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final LoginUseCase loginUseCase;
+
+  const MyApp({super.key, required this.loginUseCase});
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: Scaffold(body: Center(child: Text('Auth Foundation Ready'))),
+    return MaterialApp(
+      home: BlocProvider(
+        create: (_) => AuthBloc(loginUseCase),
+        child: LoginPage(),
+      ),
     );
   }
 }
