@@ -10,6 +10,7 @@ class AuthRemoteDataSource {
     String username,
     String password,
   ) async {
+    print('Calling login API...');
     final response = await apiClient.post(
       '/auth/login',
       body: {
@@ -17,6 +18,7 @@ class AuthRemoteDataSource {
         'password': password,
       },
     );
+    print('Login response: $response');
 
     return TokenModel.fromJson(response);
   }
