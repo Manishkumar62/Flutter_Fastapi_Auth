@@ -11,6 +11,8 @@ import 'features/auth/data/repositories/auth_repository_impl.dart';
 import 'features/auth/domain/usecases/login_usecase.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/auth/presentation/pages/login_page.dart';
+import 'features/auth/domain/usecases/check_auth_status_usecase.dart';
+import 'features/auth/presentation/pages/auth_gate.dart';
 
 void main() {
   final tokenStorage = TokenStorage();
@@ -29,20 +31,25 @@ void main() {
 
   runApp(MyApp(
     loginUseCase: LoginUseCase(authRepository),
+    tokenStorage: tokenStorage,
   ));
 }
 
 class MyApp extends StatelessWidget {
   final LoginUseCase loginUseCase;
+  final TokenStorage tokenStorage;
 
-  const MyApp({super.key, required this.loginUseCase});
+  const MyApp({super.key, required this.loginUseCase, required this.tokenStorage});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       home: BlocProvider(
-        create: (_) => AuthBloc(loginUseCase),
-        child: LoginPage(),
+        create: (_) => AuthBloc(
+          loginUseCase,
+          CheckAuthStatusUseCase(tokenStorage),
+        ),
+        child: const AuthGate(),
       ),
     );
   }

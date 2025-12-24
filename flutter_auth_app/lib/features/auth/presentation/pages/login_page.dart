@@ -18,14 +18,14 @@ class LoginPage extends StatelessWidget {
       body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthAuthenticated) {
-            Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const HomePage()),
-    );
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(const SnackBar(content: Text('Login successful')));
           }
           if (state is AuthError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message)),
-            );
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(state.message)));
           }
         },
         builder: (context, state) {
@@ -49,11 +49,11 @@ class LoginPage extends StatelessWidget {
                   ElevatedButton(
                     onPressed: () {
                       context.read<AuthBloc>().add(
-                            LoginRequested(
-                              _usernameController.text,
-                              _passwordController.text,
-                            ),
-                          );
+                        LoginRequested(
+                          _usernameController.text,
+                          _passwordController.text,
+                        ),
+                      );
                     },
                     child: const Text('Login'),
                   ),
