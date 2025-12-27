@@ -13,6 +13,11 @@ import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/auth/presentation/pages/login_page.dart';
 import 'features/auth/domain/usecases/check_auth_status_usecase.dart';
 import 'features/auth/presentation/pages/auth_gate.dart';
+import 'features/profile/data/datasources/profile_local_datasource.dart';
+import 'features/profile/data/datasources/profile_remote_datasource.dart';
+import 'features/profile/data/repositories/profile_repository_impl.dart';
+import 'features/profile/domain/usecases/get_profile_usecase.dart';
+import 'features/profile/presentation/bloc/profile_bloc.dart';
 
 void main() {
   final tokenStorage = TokenStorage();
@@ -29,28 +34,47 @@ void main() {
     tokenStorage: tokenStorage,
   );
 
-  runApp(MyApp(
-    loginUseCase: LoginUseCase(authRepository),
-    tokenStorage: tokenStorage,
-  ));
+  runApp(
+    MyApp(
+      loginUseCase: LoginUseCase(authRepository),
+      tokenStorage: tokenStorage,
+      apiClient: apiClient,
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
   final LoginUseCase loginUseCase;
   final TokenStorage tokenStorage;
+  final ApiClient apiClient;
 
-  const MyApp({super.key, required this.loginUseCase, required this.tokenStorage});
+  const MyApp({
+    super.key,
+    required this.loginUseCase,
+    required this.tokenStorage,
+    required this.apiClient,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: BlocProvider(
-        create: (_) => AuthBloc(
-          loginUseCase,
-          CheckAuthStatusUseCase(tokenStorage),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (_) =>
+              AuthBloc(loginUseCase, CheckAuthStatusUseCase(tokenStorage)),
         ),
-        child: const AuthGate(),
-      ),
+        BlocProvider(
+          create: (_) => ProfileBloc(
+            GetProfileUseCase(
+              ProfileRepositoryImpl(
+                remote: ProfileRemoteDataSource(apiClient),
+                local: ProfileLocalDataSource(),
+              ),
+            ),
+          ),
+        ),
+      ],
+      child: MaterialApp(home: const AuthGate()),
     );
   }
 }
